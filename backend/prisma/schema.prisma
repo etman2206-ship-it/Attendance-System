@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// المدرسين
+model Teacher {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  students Student[]
+  groups   Group[]
+}
+
+// الطلاب
+model Student {
+  id          String   @id @default(uuid())
+  fullName    String
+  studentCode String   @unique
+  parentPhone String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+
+  groupId String
+  group   Group @relation(fields: [groupId], references: [id])
+
+  attendance Attendance[]
+}
+
+// المجموعات
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+
+  students Student[]
+  sessions Session[]
+}
+
+// مواعيد الحصص
+model Session {
+  id        String   @id @default(uuid())
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+
+  groupId String
+  group   Group @relation(fields: [groupId], references: [id])
+
+  attendance Attendance[]
+}
+
+// الحضور والغياب
+model Attendance {
+  id        String   @id @default(uuid())
+  checkIn   DateTime @default(now())
+  status    String   @default("PRESENT")
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  @@unique([studentId, sessionId])
+}
